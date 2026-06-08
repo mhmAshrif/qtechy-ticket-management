@@ -71,11 +71,10 @@ const ticketSchema = new mongoose.Schema({
   ]
 }, { timestamps: true });
 
-// Auto-generate ticket number on save
-ticketSchema.pre('save', async function () {
-  if (this.isNew) {
+// Auto-generate ticket number before validation so required check passes
+ticketSchema.pre('validate', async function () {
+  if (this.isNew && !this.ticketNumber) {
     try {
-      // Check if connection is ready
       if (mongoose.connection.readyState === 1) {
         const lastTicket = await mongoose.model('Ticket').findOne().sort({ createdAt: -1 });
         const number = lastTicket ? parseInt(lastTicket.ticketNumber.split('-')[1]) + 1 : 1;

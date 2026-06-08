@@ -3,6 +3,7 @@ const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const connectDB = require('./config/db');
+const User = require('./models/User');
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
@@ -17,10 +18,32 @@ console.log('Loaded MONGO_URI:', process.env.MONGO_URI);
 // Initialize Express app
 const app = express();
 
-// Connect to MongoDB
-(async () => {
+// Connect to MongoDB and seed default users
+const initializeApp = async () => {
   await connectDB();
-})();
+
+  const defaultUsers = [
+    { name: 'Admin User', email: 'admin@test.com', password: 'password123', role: 'Admin' },
+    { name: 'Agent User', email: 'agent@test.com', password: 'password123', role: 'Agent' },
+    { name: 'Regular User', email: 'user@test.com', password: 'password123', role: 'User' }
+  ];
+
+  for (const userData of defaultUsers) {
+    const existingUser = await User.findOne({ email: userData.email });
+    if (!existingUser) {
+      try {
+        await User.create(userData);
+        console.log(`Created default user: ${userData.email} (${userData.role})`);
+      } catch (error) {
+        console.error(`Failed to create default user ${userData.email}:`, error.message);
+      }
+    }
+  }
+};
+
+initializeApp().catch((error) => {
+  console.error('Failed to initialize app:', error);
+});
 
 // Middleware
 app.use(express.json()); 
