@@ -17,7 +17,8 @@ const createTicket = async (title, description, category, priority, createdBy) =
 
 // Get all tickets with filters
 const getTickets = async (filters = {}, pagination = {}) => {
-  const { status, priority, category, assignedTo, search } = filters;
+  const { status, priority, category, assignedTo, search, createdBy } = filters;
+  const orCriteria = filters.$or;
   const { page = 1, limit = 10 } = pagination;
 
   let query = {};
@@ -26,12 +27,22 @@ const getTickets = async (filters = {}, pagination = {}) => {
   if (priority) query.priority = priority;
   if (category) query.category = category;
   if (assignedTo) query.assignedTo = assignedTo;
-  if (search) {
-    query.$or = [
+  if (createdBy) query.createdBy = createdBy;
+
+  const searchQuery = search ? {
+    $or: [
       { title: { $regex: search, $options: 'i' } },
       { description: { $regex: search, $options: 'i' } },
       { ticketNumber: { $regex: search, $options: 'i' } }
-    ];
+    ]
+  } : null;
+
+  if (orCriteria && searchQuery) {
+    query.$and = [{ $or: orCriteria }, searchQuery];
+  } else if (orCriteria) {
+    query.$or = orCriteria;
+  } else if (searchQuery) {
+    query.$or = searchQuery.$or;
   }
 
   const skip = (page - 1) * limit;

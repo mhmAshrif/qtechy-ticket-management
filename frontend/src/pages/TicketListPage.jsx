@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { fetchTicketsStart, fetchTicketsSuccess, fetchTicketsFailure, setFilters } from '../redux/ticketSlice';
-import { getTickets } from '../api/ticketsApi';
+import { fetchTicketsStart, fetchTicketsSuccess, fetchTicketsFailure, deleteTicketStart, deleteTicketSuccess, deleteTicketFailure, setFilters, updateTicketSuccess } from '../redux/ticketSlice';
+import { getTickets, deleteTicket, assignTicket } from '../api/ticketsApi';
+import { getAgents } from '../api/usersApi';
 import './TicketPages.css';
 
 const TicketListPage = () => {
@@ -17,12 +18,12 @@ const TicketListPage = () => {
     category: '',
     search: ''
   });
+  const [agents, setAgents] = useState([]);
+  const [assigningTicketId, setAssigningTicketId] = useState(null);
+  const [selectedAgent, setSelectedAgent] = useState('');
+  const [assigningLoading, setAssigningLoading] = useState(false);
 
-  useEffect(() => {
-    fetchTicketsData();
-  }, [pagination.page]);
-
-  const fetchTicketsData = async () => {
+  const fetchTicketsData = useCallback(async () => {
     dispatch(fetchTicketsStart());
     try {
       const params = {
@@ -40,7 +41,27 @@ const TicketListPage = () => {
     } catch (error) {
       dispatch(fetchTicketsFailure(error.message));
     }
-  };
+  }, [dispatch, filters, pagination.limit, pagination.page]);
+
+  useEffect(() => {
+    fetchTicketsData();
+  }, [fetchTicketsData]);
+
+  useEffect(() => {
+    const fetchAgentsData = async () => {
+      if (user?.role !== 'Admin') return;
+      try {
+        const response = await getAgents();
+        if (response.success) {
+          setAgents(response.data);
+        }
+      } catch (err) {
+        // ignore agent fetch failure
+      }
+    };
+
+    fetchAgentsData();
+  }, [user?.role]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -68,6 +89,53 @@ const TicketListPage = () => {
       category: null,
       search: null
     }));
+  };
+
+  const handleDeleteTicket = async (ticketId) => {
+    if (!window.confirm('Are you sure you want to delete this ticket?')) return;
+    dispatch(deleteTicketStart());
+    try {
+      const response = await deleteTicket(ticketId);
+      if (response.success) {
+        dispatch(deleteTicketSuccess(ticketId));
+      } else {
+        dispatch(deleteTicketFailure(response.message));
+        alert(response.message);
+      }
+    } catch (error) {
+      const errorMsg = error.response?.data?.message || 'Failed to delete ticket';
+      dispatch(deleteTicketFailure(errorMsg));
+      alert(errorMsg);
+    }
+  };
+
+  const handleOpenAssignModal = (ticketId) => {
+    setAssigningTicketId(ticketId);
+    setSelectedAgent('');
+  };
+
+  const handleCloseAssignModal = () => {
+    setAssigningTicketId(null);
+    setSelectedAgent('');
+  };
+
+  const handleAssignTicket = async () => {
+    if (!selectedAgent) return;
+
+    setAssigningLoading(true);
+    try {
+      const response = await assignTicket(assigningTicketId, { assignedTo: selectedAgent });
+      if (response.success) {
+        dispatch(updateTicketSuccess(response.data));
+        handleCloseAssignModal();
+      } else {
+        alert(response.message);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to assign ticket');
+    } finally {
+      setAssigningLoading(false);
+    }
   };
 
   return (
@@ -159,6 +227,7 @@ const TicketListPage = () => {
                     <th>Priority</th>
                     <th>Category</th>
                     <th>Created</th>
+                    {user?.role === 'Admin' && <th>Assigned To</th>}
                     <th>Action</th>
                   </tr>
                 </thead>
@@ -179,13 +248,38 @@ const TicketListPage = () => {
                       </td>
                       <td>{ticket.category}</td>
                       <td>{new Date(ticket.createdAt).toLocaleDateString()}</td>
-                      <td>
+                      {user?.role === 'Admin' && (
+                        <td>{ticket.assignedTo?.name || 'Unassigned'}</td>
+                      )}
+                      <td className="action-column">
                         <button
                           onClick={() => navigate(`/tickets/${ticket._id}`)}
                           className="btn btn-sm btn-primary"
                         >
                           View
                         </button>
+                        {user?.role === 'Admin' && (
+                          <>
+                            <button
+                              onClick={() => handleOpenAssignModal(ticket._id)}
+                              className="btn btn-sm btn-info"
+                            >
+                              Assign
+                            </button>
+                            <button
+                              onClick={() => navigate(`/tickets/${ticket._id}/edit`)}
+                              className="btn btn-sm btn-secondary"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteTicket(ticket._id)}
+                              className="btn btn-sm btn-danger"
+                            >
+                              Delete
+                            </button>
+                          </>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -211,6 +305,47 @@ const TicketListPage = () => {
               </button>
             </div>
           </>
+        )}
+
+        {assigningTicketId && (
+          <div className="modal-overlay">
+            <div className="modal-dialog">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h3>Assign Ticket</h3>
+                  <button onClick={handleCloseAssignModal} className="modal-close">&times;</button>
+                </div>
+                <div className="modal-body">
+                  <label htmlFor="agent-select">Select Agent:</label>
+                  <select
+                    id="agent-select"
+                    value={selectedAgent}
+                    onChange={(e) => setSelectedAgent(e.target.value)}
+                    className="form-control"
+                  >
+                    <option value="">Choose an agent</option>
+                    {agents.map(agent => (
+                      <option key={agent._id} value={agent._id}>
+                        {agent.name} ({agent.email})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="modal-footer">
+                  <button onClick={handleCloseAssignModal} className="btn btn-secondary">
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleAssignTicket}
+                    className="btn btn-primary"
+                    disabled={!selectedAgent || assigningLoading}
+                  >
+                    {assigningLoading ? 'Assigning...' : 'Assign'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>

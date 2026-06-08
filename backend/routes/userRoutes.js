@@ -18,11 +18,11 @@ router.use(authorize('Admin'));
 // Get all users
 router.get('/', getAllUsers);
 
-// Get single user
-router.get('/:userId', getUserById);
-
 // Get all agents
 router.get('/agents', getAgents);
+
+// Get single user
+router.get('/:userId', getUserById);
 
 // Update user
 router.put('/:userId', updateUser);

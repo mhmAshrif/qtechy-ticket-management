@@ -34,6 +34,18 @@ const getAllTickets = async (req, res) => {
     if (assignedTo) filters.assignedTo = assignedTo;
     if (search) filters.search = search;
 
+    // Non-admin users can only see their own tickets or tickets assigned to them
+    if (req.userRole !== 'Admin') {
+      if (req.userRole === 'Agent') {
+        filters.$or = [
+          { createdBy: req.userId },
+          { assignedTo: req.userId }
+        ];
+      } else {
+        filters.createdBy = req.userId;
+      }
+    }
+
     const pagination = {
       page: parseInt(page) || 1,
       limit: parseInt(limit) || 10
@@ -62,6 +74,20 @@ const getTicketById = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Ticket not found' });
     }
 
+    // Non-admin users can only view their own tickets or assigned tickets
+    if (req.userRole !== 'Admin') {
+      const ownerId = ticket.createdBy?._id?.toString() || ticket.createdBy?.toString();
+      const assignedId = ticket.assignedTo?._id?.toString() || ticket.assignedTo?.toString();
+      const userId = req.userId.toString();
+
+      const isOwner = ownerId === userId;
+      const isAssigned = assignedId === userId;
+
+      if (!isOwner && !isAssigned) {
+        return res.status(403).json({ success: false, message: 'Not authorized to view this ticket' });
+      }
+    }
+
     res.status(200).json({
       success: true,
       data: ticket
@@ -77,21 +103,34 @@ const updateTicket = async (req, res) => {
     const { ticketId } = req.params;
     const { title, description, category, priority } = req.body;
 
+    // Check if ticket exists and user has permission
+    const ticket = await ticketService.getTicketById(ticketId);
+    if (!ticket) {
+      return res.status(404).json({ success: false, message: 'Ticket not found' });
+    }
+
+    // Non-admin users can only update their own tickets
+    if (req.userRole !== 'Admin') {
+      const ownerId = ticket.createdBy?._id?.toString() || ticket.createdBy?.toString();
+      const userId = req.userId.toString();
+      const isOwner = ownerId === userId;
+
+      if (!isOwner) {
+        return res.status(403).json({ success: false, message: 'Not authorized to update this ticket' });
+      }
+    }
+
     const updateData = {};
     if (title) updateData.title = title;
     if (description) updateData.description = description;
     if (category) updateData.category = category;
     if (priority) updateData.priority = priority;
 
-    const ticket = await ticketService.updateTicket(ticketId, updateData);
-
-    if (!ticket) {
-      return res.status(404).json({ success: false, message: 'Ticket not found' });
-    }
+    const updatedTicket = await ticketService.updateTicket(ticketId, updateData);
 
     res.status(200).json({
       success: true,
-      data: ticket
+      data: updatedTicket
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -103,11 +142,21 @@ const deleteTicket = async (req, res) => {
   try {
     const { ticketId } = req.params;
 
-    const ticket = await Ticket.findByIdAndDelete(ticketId);
+    const ticket = await Ticket.findById(ticketId);
 
     if (!ticket) {
       return res.status(404).json({ success: false, message: 'Ticket not found' });
     }
+
+    // Non-admin users can only delete their own tickets
+    if (req.userRole !== 'Admin') {
+      const isOwner = ticket.createdBy.toString() === req.userId.toString();
+      if (!isOwner) {
+        return res.status(403).json({ success: false, message: 'Not authorized to delete this ticket' });
+      }
+    }
+
+    await Ticket.findByIdAndDelete(ticketId);
 
     res.status(200).json({
       success: true,

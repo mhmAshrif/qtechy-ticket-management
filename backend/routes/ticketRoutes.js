@@ -27,7 +27,7 @@ router.get('/:ticketId', getTicketById);
 router.post('/', authorize('User', 'Admin'), createTicket);
 
 // Update ticket (Creator or Admin can update)
-router.put('/:ticketId', authorize('User', 'Agent', 'Admin'), updateTicket);
+router.put('/:ticketId', authorize('User', 'Admin'), updateTicket);
 
 // Delete ticket (Admin only)
 router.delete('/:ticketId', authorize('Admin'), deleteTicket);

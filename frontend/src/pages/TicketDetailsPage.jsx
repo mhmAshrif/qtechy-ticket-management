@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchTicketStart, fetchTicketSuccess, fetchTicketFailure, addCommentStart, addCommentSuccess, addCommentFailure, updateStatusStart, updateStatusSuccess, updateStatusFailure } from '../redux/ticketSlice';
-import { getTicketById, addComment, updateTicketStatus } from '../api/ticketsApi';
+import { fetchTicketStart, fetchTicketSuccess, fetchTicketFailure, addCommentStart, addCommentSuccess, addCommentFailure, updateStatusStart, updateStatusSuccess, updateStatusFailure, deleteTicketStart, deleteTicketSuccess, deleteTicketFailure, updateTicketSuccess } from '../redux/ticketSlice';
+import { getTicketById, addComment, updateTicketStatus, deleteTicket, assignTicket } from '../api/ticketsApi';
+import { getAgents } from '../api/usersApi';
 import './TicketPages.css';
 
 const TicketDetailsPage = () => {
@@ -14,8 +15,11 @@ const TicketDetailsPage = () => {
 
   const [commentText, setCommentText] = useState('');
   const [newStatus, setNewStatus] = useState('');
+  const [assignedAgent, setAssignedAgent] = useState('');
+  const [agents, setAgents] = useState([]);
   const [submittingComment, setSubmittingComment] = useState(false);
   const [submittingStatus, setSubmittingStatus] = useState(false);
+  const [submittingAssignment, setSubmittingAssignment] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -26,6 +30,9 @@ const TicketDetailsPage = () => {
         if (response.success) {
           dispatch(fetchTicketSuccess(response.data));
           setNewStatus(response.data.status);
+          if (response.data.assignedTo) {
+            setAssignedAgent(response.data.assignedTo._id);
+          }
         }
       } catch (err) {
         const errorMsg = err.response?.data?.message || 'Failed to load ticket';
@@ -36,6 +43,42 @@ const TicketDetailsPage = () => {
 
     fetchTicket();
   }, [ticketId, dispatch]);
+
+  useEffect(() => {
+    const fetchAgents = async () => {
+      if (user?.role !== 'Admin') return;
+      try {
+        const response = await getAgents();
+        if (response.success) {
+          setAgents(response.data);
+        }
+      } catch (err) {
+        // ignore agent fetch failure; admin assignment remains optional
+      }
+    };
+
+    fetchAgents();
+  }, [user]);
+
+  const handleAssignTicket = async (e) => {
+    e.preventDefault();
+    if (!assignedAgent) return;
+
+    setSubmittingAssignment(true);
+    try {
+      const response = await assignTicket(ticketId, { assignedTo: assignedAgent });
+      if (response.success) {
+        dispatch(updateTicketSuccess(response.data));
+        setAssignedAgent(response.data.assignedTo?._id || '');
+      } else {
+        setError(response.message);
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to assign ticket');
+    } finally {
+      setSubmittingAssignment(false);
+    }
+  };
 
   const handleAddComment = async (e) => {
     e.preventDefault();
@@ -84,10 +127,29 @@ const TicketDetailsPage = () => {
     }
   };
 
+  const handleDeleteTicket = async () => {
+    if (!window.confirm('Are you sure you want to delete this ticket?')) return;
+    dispatch(deleteTicketStart());
+    try {
+      const response = await deleteTicket(ticketId);
+      if (response.success) {
+        dispatch(deleteTicketSuccess(ticketId));
+        navigate('/tickets');
+      } else {
+        setError(response.message);
+        dispatch(deleteTicketFailure(response.message));
+      }
+    } catch (err) {
+      const errorMsg = err.response?.data?.message || 'Failed to delete ticket';
+      setError(errorMsg);
+      dispatch(deleteTicketFailure(errorMsg));
+    }
+  };
+
   if (loading) return <p className="loading">Loading ticket...</p>;
   if (!ticket) return <p className="error">Ticket not found</p>;
 
-  const canEdit = user?._id === ticket.createdBy._id || user?.role === 'Admin' || user?.role === 'Agent';
+  const canEdit = user?._id === ticket.createdBy._id || user?.role === 'Admin';
   const canChangeStatus = user?.role === 'Admin' || user?.role === 'Agent';
 
   return (
@@ -160,9 +222,37 @@ const TicketDetailsPage = () => {
             </form>
           )}
 
+          {user?.role === 'Admin' && (
+            <form onSubmit={handleAssignTicket} className="assignment-form">
+              <h3>Assign Ticket</h3>
+              <div className="form-row">
+                <select
+                  value={assignedAgent}
+                  onChange={(e) => setAssignedAgent(e.target.value)}
+                  className="form-control"
+                >
+                  <option value="">Select agent</option>
+                  {agents.map(agent => (
+                    <option key={agent._id} value={agent._id}>
+                      {agent.name} ({agent.email})
+                    </option>
+                  ))}
+                </select>
+                <button type="submit" className="btn btn-primary" disabled={submittingAssignment}>
+                  {submittingAssignment ? 'Assigning...' : 'Assign'}
+                </button>
+              </div>
+            </form>
+          )}
+
           {canEdit && (
             <button onClick={() => navigate(`/tickets/${ticketId}/edit`)} className="btn btn-secondary">
               Edit Ticket
+            </button>
+          )}
+          {user?.role === 'Admin' && (
+            <button onClick={handleDeleteTicket} className="btn btn-danger">
+              Delete Ticket
             </button>
           )}
 

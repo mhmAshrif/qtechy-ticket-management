@@ -165,6 +165,15 @@
   background-color: #c0392b;
 }
 
+.btn-info {
+  background-color: #3498db;
+  color: white;
+}
+
+.btn-info:hover {
+  background-color: #2980b9;
+}
+
 .btn-success {
   background-color: #27ae60;
   color: white;
