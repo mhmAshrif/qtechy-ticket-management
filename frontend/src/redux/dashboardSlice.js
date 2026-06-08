@@ -9,7 +9,11 @@ const initialState = {
     closedTickets: 0,
     urgentTickets: 0,
     totalUsers: 0,
-    agentCount: 0
+    agentCount: 0,
+    ticketsByStatus: [],
+    ticketsByCategory: [],
+    agentWorkload: [],
+    recentActivity: []
   },
   loading: false,
   error: null

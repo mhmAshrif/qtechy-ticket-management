@@ -584,6 +584,62 @@
   background-color: #f8f9fa;
 }
 
+.ticket-status-timeline {
+  display: flex;
+  gap: 1rem;
+  margin: 1.5rem 0;
+  justify-content: space-between;
+}
+
+.timeline-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  text-align: center;
+  color: #95a5a6;
+}
+
+.timeline-step::before,
+.timeline-step::after {
+  content: '';
+}
+
+.timeline-step.completed {
+  color: #2c3e50;
+}
+
+.step-circle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px solid #dee2e6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+  background: #fff;
+  color: inherit;
+}
+
+.timeline-step.completed .step-circle {
+  border-color: #667eea;
+  background: #667eea;
+  color: white;
+}
+
+.step-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .ticket-status-timeline {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
 /* Modal Styles */
 .modal-overlay {
   position: fixed;

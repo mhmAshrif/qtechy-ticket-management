@@ -175,6 +175,19 @@ const TicketDetailsPage = () => {
             </div>
           </div>
 
+          <div className="ticket-status-timeline">
+            {['Open', 'In Progress', 'Resolved'].map((step, index) => {
+              const effectiveStatus = ticket.status === 'Closed' ? 'Resolved' : ticket.status;
+              const completed = ['Open', 'In Progress', 'Resolved'].indexOf(effectiveStatus) >= index;
+              return (
+                <div key={step} className={`timeline-step ${completed ? 'completed' : ''}`}>
+                  <div className="step-circle">{index + 1}</div>
+                  <div className="step-label">{step}</div>
+                </div>
+              );
+            })}
+          </div>
+
           {error && <div className="error-message">{error}</div>}
 
           <div className="ticket-meta">

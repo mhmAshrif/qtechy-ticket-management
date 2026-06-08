@@ -51,6 +51,7 @@ const getTickets = async (filters = {}, pagination = {}) => {
     Ticket.find(query)
       .populate('createdBy', 'name email')
       .populate('assignedTo', 'name email')
+      .populate('comments.user', 'name email role')
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 }),
@@ -147,6 +148,102 @@ const getDashboardStats = async () => {
     User.countDocuments({ role: 'Agent' })
   ]);
 
+  const ticketsByStatus = await Ticket.aggregate([
+    {
+      $group: {
+        _id: '$status',
+        count: { $sum: 1 }
+      }
+    }
+  ]);
+
+  const ticketsByCategory = await Ticket.aggregate([
+    {
+      $group: {
+        _id: '$category',
+        count: { $sum: 1 }
+      }
+    }
+  ]);
+
+  const agents = await User.find({ role: 'Agent' }).select('name').lean();
+  const openTicketsByAgent = await Ticket.aggregate([
+    {
+      $match: {
+        status: 'Open',
+        assignedTo: { $ne: null }
+      }
+    },
+    {
+      $group: {
+        _id: '$assignedTo',
+        openCount: { $sum: 1 }
+      }
+    }
+  ]);
+
+  const agentOpenCountMap = new Map(openTicketsByAgent.map(item => [item._id.toString(), item.openCount]));
+  const agentWorkload = agents.map(agent => ({
+    agentId: agent._id,
+    agentName: agent.name,
+    openCount: agentOpenCountMap.get(agent._id.toString()) || 0
+  }));
+
+  const recentCreated = await Ticket.find()
+    .sort({ createdAt: -1 })
+    .limit(5)
+    .populate('createdBy', 'name role')
+    .select('ticketNumber title createdBy createdAt')
+    .lean();
+
+  const recentStatusUpdates = await Ticket.aggregate([
+    { $unwind: '$statusHistory' },
+    { $sort: { 'statusHistory.changedAt': -1 } },
+    { $limit: 10 },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'statusHistory.changedBy',
+        foreignField: '_id',
+        as: 'changedBy'
+      }
+    },
+    { $unwind: { path: '$changedBy', preserveNullAndEmptyArrays: true } },
+    {
+      $project: {
+        ticketNumber: 1,
+        status: '$statusHistory.status',
+        changedAt: '$statusHistory.changedAt',
+        changedByName: '$changedBy.name',
+        changedByRole: '$changedBy.role'
+      }
+    }
+  ]);
+
+  const createdEvents = recentCreated.map(ticket => ({
+    date: ticket.createdAt,
+    text: `${ticket.createdBy?.name || 'User'} created a new ticket ${ticket.ticketNumber}`
+  }));
+
+  const statusEvents = recentStatusUpdates.map(update => {
+    const statusLabel = update.status === 'Resolved'
+      ? 'resolved'
+      : update.status === 'Closed'
+      ? 'closed'
+      : update.status === 'In Progress'
+      ? 'moved to In Progress'
+      : `changed to ${update.status}`;
+
+    return {
+      date: update.changedAt,
+      text: `${update.changedByName || 'User'} ${statusLabel} ${update.ticketNumber}`
+    };
+  });
+
+  const recentActivity = [...createdEvents, ...statusEvents]
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .slice(0, 5);
+
   return {
     totalTickets,
     openTickets,
@@ -155,7 +252,11 @@ const getDashboardStats = async () => {
     closedTickets,
     urgentTickets,
     totalUsers,
-    agentCount
+    agentCount,
+    ticketsByStatus: ticketsByStatus.map(item => ({ status: item._id, count: item.count })),
+    ticketsByCategory: ticketsByCategory.map(item => ({ category: item._id, count: item.count })),
+    agentWorkload,
+    recentActivity
   };
 };
 

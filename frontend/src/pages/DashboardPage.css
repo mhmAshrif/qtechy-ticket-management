@@ -202,3 +202,262 @@
     text-align: center;
   }
 }
+
+.user-dashboard-card,
+.alert-card,
+.user-dashboard-list {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.dashboard-search {
+  margin-top: 1rem;
+}
+
+.dashboard-search .form-control {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.alert-card h3 {
+  margin-bottom: 0.5rem;
+}
+
+.alert-card ul {
+  padding-left: 1.2rem;
+  margin-top: 0.75rem;
+}
+
+.alert-card li {
+  margin-bottom: 0.5rem;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  color: #3498db;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.link-button:hover {
+  text-decoration: underline;
+}
+
+.tickets-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.ticket-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  border: 1px solid #ebedf0;
+  border-radius: 8px;
+  padding: 1rem;
+  background: #fff;
+}
+
+.ticket-list-item.urgent-ticket {
+  border-color: rgba(231, 76, 60, 0.35);
+  box-shadow: 0 0 0 1px rgba(231, 76, 60, 0.15), 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.ticket-list-info {
+  flex: 1;
+}
+
+.agent-dashboard-panel {
+  margin-bottom: 2rem;
+}
+
+.filter-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  justify-content: center;
+}
+
+.filter-button {
+  border: 1px solid #d1d5db;
+  background: white;
+  color: #2c3e50;
+  padding: 0.7rem 1rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.filter-button:hover,
+.filter-button.selected {
+  background: #667eea;
+  border-color: #667eea;
+  color: white;
+}
+
+.priority-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 999px;
+  text-transform: uppercase;
+}
+
+.priority-pill.urgent {
+  background: #fdecea;
+  color: #c0392b;
+  border: 1px solid rgba(192, 57, 43, 0.2);
+}
+
+.ticket-meta-row {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.time-open,
+.ticket-action-status,
+.ticket-category {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.ticket-action-status {
+  font-weight: 600;
+}
+
+.ticket-action-status:before {
+  content: '\2022';
+  margin-right: 0.4rem;
+  color: #667eea;
+}
+
+.ticket-list-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.ticket-number {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.attention-badge {
+  background: #ffe8e6;
+  color: #c0392b;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+}
+
+.ticket-meta-row {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.status-label,
+.ticket-category {
+  color: #6c757d;
+  font-size: 0.95rem;
+}
+
+.ticket-list-actions {
+  display: flex;
+  align-items: center;
+}
+
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.chart-card,
+.panel-card {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.chart-card h3,
+.panel-card h3 {
+  margin-bottom: 1rem;
+  color: #2c3e50;
+}
+
+.admin-panels {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.workload-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.workload-table th,
+.workload-table td {
+  text-align: left;
+  padding: 0.85rem 0.75rem;
+  border-bottom: 1px solid #ebedf0;
+}
+
+.workload-table th {
+  color: #7f8c8d;
+  font-weight: 600;
+}
+
+.recent-activity-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.recent-activity-list li {
+  padding: 0.9rem 0;
+  border-bottom: 1px solid #ebedf0;
+}
+
+.recent-activity-list li:last-child {
+  border-bottom: none;
+}
+
+.activity-text {
+  color: #2c3e50;
+  margin-bottom: 0.35rem;
+}
+
+.activity-time {
+  color: #95a5a6;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 992px) {
+  .chart-grid,
+  .admin-panels {
+    grid-template-columns: 1fr;
+  }
+}
