@@ -87,13 +87,6 @@ const LoginPage = () => {
           <div className="auth-footer">
             <p>Don't have an account? <Link to="/register">Register here</Link></p>
           </div>
-
-          <div className="test-credentials">
-            <h4>Test Credentials:</h4>
-            <p><strong>Admin:</strong> admin@test.com / password123</p>
-            <p><strong>Agent:</strong> agent@test.com / password123</p>
-            <p><strong>User:</strong> user@test.com / password123</p>
-          </div>
         </div>
       </div>
     </div>

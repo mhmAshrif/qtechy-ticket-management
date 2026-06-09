@@ -299,6 +299,20 @@ const DashboardPage = () => {
               )}
             </div>
 
+            <div className="quick-actions">
+              <h2>Quick Actions</h2>
+              <div className="action-buttons">
+                <button onClick={() => navigate('/tickets')} className="btn btn-primary">
+                  View All Tickets
+                </button>
+                {user?.role === 'Admin' && (
+                  <button onClick={() => navigate('/users')} className="btn btn-primary">
+                    Manage Users
+                  </button>
+                )}
+              </div>
+            </div>
+
             {user?.role === 'Agent' && (
               <div className="agent-dashboard-panel">
                 <div className="dashboard-card agent-dashboard-card">
@@ -445,22 +459,6 @@ const DashboardPage = () => {
             )}
           </>
         )}
-
-        <div className="quick-actions">
-          <h2>Quick Actions</h2>
-          <div className="action-buttons">
-            <button onClick={() => navigate('/tickets')} className="btn btn-primary">
-              View All Tickets
-            </button>
-            {user?.role === 'Admin' && (
-              <>
-                <button onClick={() => navigate('/users')} className="btn btn-primary">
-                  Manage Users
-                </button>
-              </>
-            )}
-          </div>
-        </div>
       </div>
     </div>
   );
