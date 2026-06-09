@@ -1,5 +1,5 @@
 import { useDispatch, useSelector } from 'react-redux';
-import { Link } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import { logout } from '../redux/authSlice';
 import './Header.css';
 
@@ -21,39 +21,57 @@ const Header = ({ user }) => {
           <nav className="navbar">
             <div className="nav-items">
               {/* Dashboard - All roles */}
-              <Link to="/dashboard" className="nav-link">
+              <NavLink
+                to="/dashboard"
+                className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+              >
                 Dashboard
-              </Link>
+              </NavLink>
 
               {/* Tickets */}
               {user?.role === 'Admin' && (
-                <Link to="/tickets" className="nav-link">
+                <NavLink
+                  to="/tickets"
+                  className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                >
                   All Tickets
-                </Link>
+                </NavLink>
               )}
 
               {user?.role === 'Agent' && (
-                <Link to="/tickets" className="nav-link">
+                <NavLink
+                  to="/tickets"
+                  className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                >
                   Assigned Tickets
-                </Link>
+                </NavLink>
               )}
 
               {user?.role === 'User' && (
                 <>
-                  <Link to="/tickets/create" className="nav-link">
+                  <NavLink
+                    to="/tickets/create"
+                    className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                  >
                     Create Ticket
-                  </Link>
-                  <Link to="/tickets" className="nav-link">
+                  </NavLink>
+                  <NavLink
+                    to="/tickets"
+                    className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                  >
                     My Tickets
-                  </Link>
+                  </NavLink>
                 </>
               )}
 
               {/* User Management - Admin only */}
               {user?.role === 'Admin' && (
-                <Link to="/users" className="nav-link">
+                <NavLink
+                  to="/users"
+                  className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                >
                   User Management
-                </Link>
+                </NavLink>
               )}
 
               {/* User Info and Logout */}

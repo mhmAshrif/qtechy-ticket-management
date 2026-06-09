@@ -8,7 +8,7 @@ const router = express.Router();
 // Dashboard routes require authentication
 router.use(protect);
 
-// Get dashboard statistics (Admin and Agent only)
-router.get('/stats', authorize('Admin', 'Agent'), getDashboardStats);
+// Get dashboard statistics
+router.get('/stats', authorize('User', 'Agent', 'Admin'), getDashboardStats);
 
 module.exports = router;

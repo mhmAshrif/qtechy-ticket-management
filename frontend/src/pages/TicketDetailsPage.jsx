@@ -52,7 +52,7 @@ const TicketDetailsPage = () => {
         if (response.success) {
           setAgents(response.data);
         }
-      } catch (err) {
+      } catch {
         // ignore agent fetch failure; admin assignment remains optional
       }
     };
@@ -155,7 +155,7 @@ const TicketDetailsPage = () => {
   return (
     <div className="ticket-details-page">
       <div className="container">
-        <button onClick={() => navigate('/tickets')} className="back-btn">
+        <button onClick={() => navigate('/tickets')} className="btn btn-secondary back-btn">
           ← Back to Tickets
         </button>
 

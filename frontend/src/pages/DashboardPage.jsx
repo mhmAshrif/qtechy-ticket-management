@@ -46,7 +46,7 @@ const DashboardPage = () => {
       }
     };
 
-    if (user?.role === 'Admin' || user?.role === 'Agent') {
+    if (user?.role) {
       fetchStats();
     }
   }, [dispatch, user?.role]);
@@ -112,7 +112,10 @@ const DashboardPage = () => {
   };
 
   const formatTimeOpen = (ticket) => {
-    const createdAt = new Date(ticket.createdAt || ticket.updatedAt || Date.now());
+    const referenceTime = ticket.createdAt || ticket.updatedAt;
+    if (!referenceTime) return '0h open';
+
+    const createdAt = new Date(referenceTime);
     const now = new Date();
     const diffMs = now - createdAt;
     const diffHours = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60)));
@@ -159,6 +162,23 @@ const DashboardPage = () => {
           <h1>Welcome, {user?.name}!</h1>
           <p className="subtitle">Manage your support tickets</p>
 
+          <div className="stats-grid user-summary-grid">
+            <div className="stat-card">
+              <div className="stat-value">{stats.totalTickets}</div>
+              <div className="stat-label">Total Tickets</div>
+            </div>
+
+            <div className="stat-card open">
+              <div className="stat-value">{stats.openTickets}</div>
+              <div className="stat-label">Open Tickets</div>
+            </div>
+
+            <div className="stat-card resolved">
+              <div className="stat-value">{stats.resolvedTickets}</div>
+              <div className="stat-label">Resolved Tickets</div>
+            </div>
+          </div>
+
           <div className="dashboard-card user-dashboard-card">
             <h3>Quick Search</h3>
             <p>Find tickets by ticket number or keywords from the title.</p>
@@ -170,6 +190,18 @@ const DashboardPage = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="form-control"
               />
+            </div>
+          </div>
+
+          <div className="quick-actions">
+            <h2>Actions</h2>
+            <div className="action-buttons">
+              <button onClick={() => navigate('/tickets/create')} className="btn btn-primary">
+                Create Ticket
+              </button>
+              <button onClick={() => navigate('/tickets')} className="btn btn-secondary">
+                View All My Tickets
+              </button>
             </div>
           </div>
 
@@ -224,18 +256,6 @@ const DashboardPage = () => {
                   ))}
                 </div>
               )}
-            </div>
-          </div>
-
-          <div className="quick-actions">
-            <h2>Actions</h2>
-            <div className="action-buttons">
-              <button onClick={() => navigate('/tickets/create')} className="btn btn-primary">
-                Create Ticket
-              </button>
-              <button onClick={() => navigate('/tickets')} className="btn btn-secondary">
-                View All My Tickets
-              </button>
             </div>
           </div>
         </div>

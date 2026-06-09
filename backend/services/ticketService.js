@@ -127,28 +127,41 @@ const updateTicketStatus = async (ticketId, newStatus, userId) => {
 };
 
 // Get dashboard statistics
-const getDashboardStats = async () => {
+const getDashboardStats = async ({ userId, userRole }) => {
+  const isAdmin = userRole === 'Admin';
+  const isAgent = userRole === 'Agent';
+
+  const scopeQuery = isAdmin
+    ? {}
+    : isAgent
+      ? { assignedTo: userId }
+      : { createdBy: userId };
+
   const [
     totalTickets,
     openTickets,
     inProgressTickets,
     resolvedTickets,
     closedTickets,
-    urgentTickets,
-    totalUsers,
-    agentCount
+    urgentTickets
   ] = await Promise.all([
-    Ticket.countDocuments(),
-    Ticket.countDocuments({ status: 'Open' }),
-    Ticket.countDocuments({ status: 'In Progress' }),
-    Ticket.countDocuments({ status: 'Resolved' }),
-    Ticket.countDocuments({ status: 'Closed' }),
-    Ticket.countDocuments({ priority: 'Urgent' }),
-    User.countDocuments(),
-    User.countDocuments({ role: 'Agent' })
+    Ticket.countDocuments(scopeQuery),
+    Ticket.countDocuments({ ...scopeQuery, status: 'Open' }),
+    Ticket.countDocuments({ ...scopeQuery, status: 'In Progress' }),
+    Ticket.countDocuments({ ...scopeQuery, status: 'Resolved' }),
+    Ticket.countDocuments({ ...scopeQuery, status: 'Closed' }),
+    Ticket.countDocuments({ ...scopeQuery, priority: 'Urgent' })
   ]);
 
+  const [totalUsers, agentCount] = isAdmin
+    ? await Promise.all([
+        User.countDocuments(),
+        User.countDocuments({ role: 'Agent' })
+      ])
+    : [0, 0];
+
   const ticketsByStatus = await Ticket.aggregate([
+    { $match: scopeQuery },
     {
       $group: {
         _id: '$status',
@@ -158,6 +171,7 @@ const getDashboardStats = async () => {
   ]);
 
   const ticketsByCategory = await Ticket.aggregate([
+    { $match: scopeQuery },
     {
       $group: {
         _id: '$category',
@@ -166,30 +180,40 @@ const getDashboardStats = async () => {
     }
   ]);
 
-  const agents = await User.find({ role: 'Agent' }).select('name').lean();
-  const openTicketsByAgent = await Ticket.aggregate([
-    {
-      $match: {
-        status: 'Open',
-        assignedTo: { $ne: null }
-      }
-    },
-    {
-      $group: {
-        _id: '$assignedTo',
-        openCount: { $sum: 1 }
-      }
-    }
-  ]);
+  const agentWorkload = isAdmin
+    ? await (async () => {
+        const agents = await User.find({ role: 'Agent' }).select('name').lean();
+        const openTicketsByAgent = await Ticket.aggregate([
+          {
+            $match: {
+              status: 'Open',
+              assignedTo: { $ne: null }
+            }
+          },
+          {
+            $group: {
+              _id: '$assignedTo',
+              openCount: { $sum: 1 }
+            }
+          }
+        ]);
 
-  const agentOpenCountMap = new Map(openTicketsByAgent.map(item => [item._id.toString(), item.openCount]));
-  const agentWorkload = agents.map(agent => ({
-    agentId: agent._id,
-    agentName: agent.name,
-    openCount: agentOpenCountMap.get(agent._id.toString()) || 0
-  }));
+        const agentOpenCountMap = new Map(openTicketsByAgent.map(item => [item._id.toString(), item.openCount]));
+        return agents.map(agent => ({
+          agentId: agent._id,
+          agentName: agent.name,
+          openCount: agentOpenCountMap.get(agent._id.toString()) || 0
+        }));
+      })()
+    : isAgent
+      ? [{
+          agentId: userId,
+          agentName: 'You',
+          openCount: openTickets
+        }]
+      : [];
 
-  const recentCreated = await Ticket.find()
+  const recentCreated = await Ticket.find(scopeQuery)
     .sort({ createdAt: -1 })
     .limit(5)
     .populate('createdBy', 'name role')
@@ -197,6 +221,7 @@ const getDashboardStats = async () => {
     .lean();
 
   const recentStatusUpdates = await Ticket.aggregate([
+    { $match: scopeQuery },
     { $unwind: '$statusHistory' },
     { $sort: { 'statusHistory.changedAt': -1 } },
     { $limit: 10 },
