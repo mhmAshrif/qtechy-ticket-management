@@ -93,10 +93,13 @@ app.use((req, res) => {
   res.status(404).json({ success: false, message: 'Route not found' });
 });
 
-// Define the port
+
+
+// Define the port and the Alwaysdata IP
 const PORT = process.env.PORT || 5000;
+const HOST = process.env.IP || "0.0.0.0";
 
 // Start the server
-app.listen(PORT, () => {
+app.listen(PORT, HOST, () => {
   console.log(`Server is running in ${process.env.NODE_ENV} mode on port ${PORT}`);
 });
