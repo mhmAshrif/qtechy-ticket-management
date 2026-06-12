@@ -1,13 +1,29 @@
-import { useDispatch, useSelector } from 'react-redux';
-import { NavLink, Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { NavLink, Link, useLocation } from 'react-router-dom';
 import { logout } from '../redux/authSlice';
 import './Header.css';
 
 const Header = ({ user }) => {
   const dispatch = useDispatch();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const location = useLocation();
+
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [location.pathname]);
 
   const handleLogout = () => {
     dispatch(logout());
+    setIsMenuOpen(false);
+  };
+
+  const closeMenu = () => {
+    setIsMenuOpen(false);
+  };
+
+  const handleNavClick = () => {
+    closeMenu();
   };
 
   return (
@@ -18,11 +34,24 @@ const Header = ({ user }) => {
             QTechy Tickets
           </Link>
 
-          <nav className="navbar">
+          <button
+            type="button"
+            className="menu-toggle"
+            aria-expanded={isMenuOpen}
+            aria-label={isMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            onClick={() => setIsMenuOpen(open => !open)}
+          >
+            <span />
+            <span />
+            <span />
+          </button>
+
+          <nav className={`navbar ${isMenuOpen ? 'open' : ''}`}>
             <div className="nav-items">
               {/* Dashboard - All roles */}
               <NavLink
                 to="/dashboard"
+                onClick={handleNavClick}
                 className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
               >
                 Dashboard
@@ -32,6 +61,7 @@ const Header = ({ user }) => {
               {user?.role === 'Admin' && (
                 <NavLink
                   to="/tickets"
+                  onClick={handleNavClick}
                   className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
                 >
                   All Tickets
@@ -41,6 +71,7 @@ const Header = ({ user }) => {
               {user?.role === 'Agent' && (
                 <NavLink
                   to="/tickets"
+                  onClick={handleNavClick}
                   className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
                 >
                   Assigned Tickets
@@ -51,12 +82,14 @@ const Header = ({ user }) => {
                 <>
                   <NavLink
                     to="/tickets/create"
+                    onClick={handleNavClick}
                     className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
                   >
                     Create Ticket
                   </NavLink>
                   <NavLink
                     to="/tickets"
+                    onClick={handleNavClick}
                     className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
                   >
                     My Tickets
@@ -68,6 +101,7 @@ const Header = ({ user }) => {
               {user?.role === 'Admin' && (
                 <NavLink
                   to="/users"
+                  onClick={handleNavClick}
                   className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
                 >
                   User Management

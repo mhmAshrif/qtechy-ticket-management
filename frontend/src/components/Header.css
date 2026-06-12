@@ -21,6 +21,7 @@
   justify-content: space-between;
   align-items: center;
   gap: 1.5rem;
+  position: relative;
 }
 
 .logo {
@@ -54,6 +55,30 @@
   gap: 0.75rem;
   justify-content: flex-end;
   flex-wrap: wrap;
+}
+
+.menu-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 0.28rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  padding: 0;
+}
+
+.menu-toggle span {
+  display: block;
+  width: 1.15rem;
+  height: 2px;
+  border-radius: 999px;
+  background: white;
+  transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
 .nav-link {
@@ -107,26 +132,72 @@
 
 @media (max-width: 768px) {
   .header-content {
-    flex-direction: column;
-    gap: 1rem;
+    flex-wrap: wrap;
+    gap: 0.9rem;
+  }
+
+  .menu-toggle {
+    display: inline-flex;
+    margin-left: auto;
+  }
+
+  .navbar {
+    display: none;
+    width: 100%;
+  }
+
+  .navbar.open {
+    display: block;
   }
 
   .nav-items {
     flex-direction: column;
     gap: 0.5rem;
     width: 100%;
+    align-items: stretch;
+    justify-content: flex-start;
+    padding-top: 0.25rem;
   }
 
   .nav-link {
     width: 100%;
     text-align: center;
+    border-radius: 16px;
+    padding: 0.85rem 1rem;
   }
 
   .user-section {
     width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    gap: 0.65rem;
     border-left: none;
     border-top: 1px solid rgba(255, 255, 255, 0.2);
-    padding-left: 0;
-    padding-top: 1rem;
+    padding: 1rem 0 0;
+    margin-top: 0.25rem;
+  }
+
+  .user-info {
+    white-space: normal;
+    line-height: 1.35;
+  }
+
+  .logout-btn {
+    width: 100%;
+    border-radius: 16px;
+    padding: 0.85rem 1rem;
+  }
+
+  .menu-toggle[aria-expanded='true'] span:nth-child(1) {
+    transform: translateY(6px) rotate(45deg);
+  }
+
+  .menu-toggle[aria-expanded='true'] span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .menu-toggle[aria-expanded='true'] span:nth-child(3) {
+    transform: translateY(-6px) rotate(-45deg);
   }
 }
