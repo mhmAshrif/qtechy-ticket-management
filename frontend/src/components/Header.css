@@ -132,22 +132,35 @@
 
 @media (max-width: 768px) {
   .header-content {
-    flex-wrap: wrap;
     gap: 0.9rem;
+    padding-right: 3.25rem;
   }
 
   .menu-toggle {
     display: inline-flex;
-    margin-left: auto;
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin-left: 0;
   }
 
   .navbar {
     display: none;
+    position: absolute;
+    top: calc(100% + 0.65rem);
+    left: 0;
+    right: 0;
     width: 100%;
+    z-index: 60;
   }
 
   .navbar.open {
     display: block;
+    background: rgba(15, 23, 42, 0.98);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    box-shadow: 0 22px 42px rgba(15, 23, 42, 0.36);
+    padding: 0.85rem;
   }
 
   .nav-items {
@@ -176,6 +189,10 @@
     border-top: 1px solid rgba(255, 255, 255, 0.2);
     padding: 1rem 0 0;
     margin-top: 0.25rem;
+  }
+
+  .navbar.open .user-section {
+    padding-left: 0;
   }
 
   .user-info {
